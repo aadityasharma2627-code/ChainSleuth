@@ -1,64 +1,606 @@
 import { useEffect, useRef } from "react";
 import "./LandingPage.css";
 
-const EXTERNAL_SCRIPTS = [
-  "https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js",
-  "https://cdn.jsdelivr.net/npm/d3@7",
-];
+const BODY_HTML = `
+    <div class="grid-bg"></div>
+    <nav class="nav" id="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo" aria-label="ChainSleuth Home">
+                <div class="nav-logo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div>
+                ChainSleuth
+            </a>
+            <ul class="nav-links">
+                <li><a href="#investigate" class="active">Investigate</a></li>
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#graph">Transaction Graph</a></li>
+                <li><a href="#alerts">Alerts</a></li>
+                <li><a href="#case">Investigations</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+            <div class="nav-right">
+                <a href="/login" class="btn btn-secondary btn-sm" style="border-radius: 8px;">Login Portal &rarr;</a>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#investigate">Investigate</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#graph">Transaction Graph</a>
+        <a href="#alerts">Alerts</a>
+        <a href="#case">Investigations</a>
+        <a href="#about">About</a>
+    </div>
 
-const BODY_HTML = "<nav class=\"nav\">\n  <div class=\"container nav-inner\">\n    <a class=\"logo\" href=\"#home\">CHAIN<span>SLEUTH</span></a>\n    <div class=\"navlinks\">\n      <a href=\"#investigate\">Investigate</a>\n      <a href=\"#dashboard\">Dashboard</a>\n      <a href=\"#patterns\">Patterns</a>\n      <a href=\"#technology\">Technology</a>\n      <a href=\"#about\">About</a>\n    </div>\n    <div class=\"nav-actions\">\n      <div class=\"status\"><span class=\"dot\"></span> SYSTEM OPERATIONAL</div>\n      <button class=\"btn btn-primary\" onclick=\"scrollToInvestigation()\">Start Investigation</button>\n      <button class=\"menu\" aria-label=\"Open menu\" onclick=\"toggleMenu()\"><i data-lucide=\"menu\"></i></button>\n    </div>\n  </div>\n</nav>\n\n<main id=\"home\">\n<section class=\"hero\">\n  <div class=\"container hero-grid\">\n    <div>\n      <div class=\"eyebrow\">BLOCKCHAIN FORENSICS / INTELLIGENCE PLATFORM</div>\n      <h1>Trace the <span class=\"lime\">money.</span><br>Expose the <span class=\"lime\">pattern.</span></h1>\n      <p class=\"hero-copy\">Investigate cryptocurrency transactions, uncover suspicious wallet relationships, and identify potential laundering patterns through transparent blockchain intelligence.</p>\n      <div class=\"hero-actions\">\n        <button class=\"btn btn-primary\" onclick=\"scrollToInvestigation()\">Start Investigation <span>\u2192</span></button>\n        <button class=\"btn btn-secondary\" onclick=\"loadDemo()\">View Live Demo</button>\n      </div>\n      <div class=\"data-source\">\n        <div class=\"source\"><small>DATA SOURCE</small><b>Etherscan / Ethereum</b></div>\n        <div class=\"source\"><small>DATA SOURCE</small><b>Blockchain.info / Bitcoin</b></div>\n        <div class=\"source\"><small>MODE</small><b>Explainable Analysis</b></div>\n      </div>\n    </div>\n    <div class=\"hero-visual\">\n      <div class=\"graph-shell\"><svg id=\"heroGraph\"></svg></div>\n      <div class=\"float-card fc-risk\"><small>SUSPICION SCORE</small><strong>87 / 100</strong></div>\n      <div class=\"float-card fc-wallets\"><small>LINKED WALLETS</small><strong>34 CONNECTIONS</strong></div>\n      <div class=\"float-card fc-pattern\"><small>DETECTED PATTERN</small><strong>Rapid Pass-Through</strong></div>\n    </div>\n  </div>\n</section>\n\n<div class=\"marquee\"><div class=\"marquee-track\">\n  BLOCKCHAIN INTELLIGENCE &nbsp; \u2022 &nbsp; TRANSACTION FORENSICS &nbsp; \u2022 &nbsp; WALLET GRAPH ANALYSIS &nbsp; \u2022 &nbsp; EXPLAINABLE RISK &nbsp; \u2022 &nbsp; BLOCKCHAIN INTELLIGENCE &nbsp; \u2022 &nbsp; TRANSACTION FORENSICS &nbsp; \u2022 &nbsp; WALLET GRAPH ANALYSIS &nbsp; \u2022 &nbsp; EXPLAINABLE RISK &nbsp; \u2022 &nbsp;\n</div></div>\n\n<section class=\"section\">\n  <div class=\"container\">\n    <div class=\"section-head\">\n      <div><div class=\"section-kicker\">WHY CHAINSLEUTH?</div><h2>Blockchain data is public.<br><span class=\"lime\">Investigation shouldn't be.</span></h2></div>\n      <p class=\"section-desc\">ChainSleuth transforms raw transaction data into traceable flows, detectable patterns, and prioritized investigative leads.</p>\n    </div>\n    <div class=\"cards3\">\n      <article class=\"feature-card\"><div class=\"num\">01.</div><h3>Trace</h3><p>Follow cryptocurrency funds across connected wallets and reconstruct transaction paths.</p><a href=\"#investigate\">Explore \u2192</a></article>\n      <article class=\"feature-card active\"><div class=\"num\">02.</div><h3>Detect</h3><p>Identify fund splitting, rapid pass-throughs, peel chains, and flagged-address connections.</p><a href=\"#patterns\">View patterns \u2192</a></article>\n      <article class=\"feature-card\"><div class=\"num\">03.</div><h3>Prioritize</h3><p>Generate a transparent suspicion score so investigators know where to look first.</p><a href=\"#dashboard\">See analysis \u2192</a></article>\n    </div>\n  </div>\n</section>\n\n<section class=\"section investigation\" id=\"investigate\">\n  <div class=\"container\">\n    <div class=\"section-head\">\n      <div><div class=\"section-kicker\">INVESTIGATION CONSOLE</div><h2>Start an <span class=\"lime\">investigation.</span></h2></div>\n      <p class=\"section-desc\">Enter a wallet address or load the prepared demo case to explore the complete investigator workflow.</p>\n    </div>\n    <div class=\"investigator\">\n      <div class=\"input-area\">\n        <div class=\"input-label\">TARGET WALLET ADDRESS</div>\n        <div class=\"address-row\">\n          <input id=\"walletInput\" value=\"\" placeholder=\"0x742d35Cc6634C0532925a3b844Bc454e4438f44e\">\n          <button id=\"analyzeBtn\" class=\"btn btn-primary\" onclick=\"analyze()\">Analyze Wallet \u2192</button>\n        </div>\n        <div class=\"controls\">\n          <select id=\"chain\"><option>Ethereum</option><option>Bitcoin</option></select>\n          <select id=\"mode\"><option>Full Analysis</option><option>Transaction Flow</option><option>Risk Analysis</option></select>\n          <button class=\"btn btn-secondary\" onclick=\"loadDemo()\">Load Demo Investigation</button>\n        </div>\n      </div>\n      <div class=\"demo-side\"><small>DEMO CASE</small><strong>CS-2026-0142<br>High-risk transaction cluster</strong><button class=\"btn btn-secondary\" onclick=\"loadDemo()\">Load case \u2192</button></div>\n    </div>\n\n    <div id=\"loading\" class=\"panel\" style=\"display:none;margin-top:12px;padding:28px\">\n      <div class=\"input-label\">ANALYSIS IN PROGRESS</div>\n      <div id=\"loadingText\" style=\"font-size:20px;font-weight:800\">Fetching blockchain data...</div>\n    </div>\n\n    <div id=\"results\" class=\"results\">\n      <div class=\"metrics\" id=\"dashboard\">\n        <div class=\"metric\"><small>RISK SCORE</small><strong class=\"lime\">87/100</strong><em>HIGH RISK</em></div>\n        <div class=\"metric\"><small>TRANSACTIONS</small><strong>247</strong><em>ANALYZED</em></div>\n        <div class=\"metric\"><small>LINKED WALLETS</small><strong>34</strong><em>8 FLAGGED</em></div>\n        <div class=\"metric\"><small>TOTAL VOLUME</small><strong>$1.42M</strong><em>ESTIMATED</em></div>\n        <div class=\"metric\"><small>PATTERNS</small><strong>4</strong><em>DETECTED</em></div>\n      </div>\n\n      <div class=\"analysis-grid\">\n        <div class=\"panel\">\n          <div class=\"panel-head\"><h3>Transaction Flow</h3><span>Click a wallet for details</span></div>\n          <svg id=\"mainGraph\"></svg>\n        </div>\n        <div class=\"panel\">\n          <div class=\"panel-head\"><h3>Suspicion Analysis</h3><span>Explainable score</span></div>\n          <div class=\"risk-panel\">\n            <div class=\"risk-score\">\n              <div class=\"ring\"><b>87</b></div>\n              <div class=\"risk-title\"><small>OVERALL STATUS</small><strong>HIGH RISK</strong><div style=\"color:var(--muted);font-size:11px;margin-top:7px\">4 meaningful indicators</div></div>\n            </div>\n            <div class=\"input-label\">WHY WAS THIS WALLET FLAGGED?</div>\n            <div class=\"reasons\">\n              <div class=\"reason\"><i>\u2713</i> Rapid movement of funds</div>\n              <div class=\"reason\"><i>\u2713</i> Multiple intermediary wallets</div>\n              <div class=\"reason\"><i>\u2713</i> Fund splitting detected</div>\n              <div class=\"reason\"><i>\u2713</i> Connection to flagged address</div>\n              <div class=\"reason\"><i>\u2713</i> Unusual transaction timing</div>\n            </div>\n            <button class=\"btn btn-primary\" style=\"width:100%;margin-top:22px\" onclick=\"toast('Investigation saved to local demo state.')\">Save Investigation</button>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"panel\" style=\"margin-top:12px\">\n        <div class=\"panel-head\"><h3>Transaction Timeline</h3><span>Showing suspicious activity first</span></div>\n        <div class=\"timeline\">\n          <div class=\"tx\"><div class=\"tx-time\">10:42 AM</div><div class=\"tx-route\"><strong>Wallet A \u2192 Wallet B</strong><small>0x742d...f44e \u2192 0x19a3...8bc2</small></div><div class=\"tx-amount\">$42,000<span>NORMAL</span></div></div>\n          <div class=\"tx\"><div class=\"tx-time\">10:47 AM</div><div class=\"tx-route\"><strong>Wallet B \u2192 Wallet C</strong><small>0x19a3...8bc2 \u2192 0x5fe2...119a</small></div><div class=\"tx-amount\">$39,800<span>SUSPICIOUS</span></div></div>\n          <div class=\"tx\"><div class=\"tx-time\">10:49 AM</div><div class=\"tx-route\"><strong>Wallet C \u2192 Wallet D</strong><small>0x5fe2...119a \u2192 0xa817...d921</small></div><div class=\"tx-amount\">$19,500<span>SUSPICIOUS</span></div></div>\n          <div class=\"tx\"><div class=\"tx-time\">10:51 AM</div><div class=\"tx-route\"><strong>Wallet C \u2192 Wallet E</strong><small>0x5fe2...119a \u2192 0xb20c...ee73</small></div><div class=\"tx-amount\">$19,800<span>FUND SPLITTING</span></div></div>\n        </div>\n      </div>\n\n      <div class=\"disclaimer\" style=\"margin-top:12px\">\n        <i>\u26a0</i><p><strong style=\"color:#fff\">Investigative assistance only.</strong> ChainSleuth identifies suspicious patterns in publicly available blockchain data. It does not make legal determinations or accusations. All findings should be reviewed by a qualified human investigator.</p>\n      </div>\n    </div>\n  </div>\n</section>\n\n<section class=\"section\" id=\"patterns\">\n  <div class=\"container\">\n    <div class=\"section-head\"><div><div class=\"section-kicker\">PATTERN DETECTION</div><h2>See <span class=\"lime\">why</span> it was flagged.</h2></div><p class=\"section-desc\">Instead of a black-box label, every risk indicator has a visible reason investigators can inspect.</p></div>\n    <div class=\"patterns\">\n      <article class=\"pattern\"><span class=\"badge\">DETECTED</span><h3>Fund Splitting</h3><p>Funds divided across multiple intermediary wallets in a short period.</p><div class=\"contribution\">RISK CONTRIBUTION <b>+24</b></div></article>\n      <article class=\"pattern\"><span class=\"badge\">DETECTED</span><h3>Rapid Pass-Through</h3><p>Funds moved through multiple wallets within an unusually short interval.</p><div class=\"contribution\">RISK CONTRIBUTION <b>+31</b></div></article>\n      <article class=\"pattern\"><span class=\"badge\">POSSIBLE</span><h3>Peel Chain</h3><p>Repeated intermediary transfers where amounts gradually separate from the original flow.</p><div class=\"contribution\">RISK CONTRIBUTION <b>+18</b></div></article>\n      <article class=\"pattern\"><span class=\"badge\">DETECTED</span><h3>Flagged Connection</h3><p>Direct or indirect connection to an address present on a public flagged-address list.</p><div class=\"contribution\">RISK CONTRIBUTION <b>+14</b></div></article>\n    </div>\n  </div>\n</section>\n\n<section class=\"section\" style=\"padding-top:35px\">\n  <div class=\"container\">\n    <div class=\"section-head\"><div><div class=\"section-kicker\">ALERT CENTER</div><h2>Investigate the <span class=\"lime\">signal.</span></h2></div></div>\n    <div class=\"alerts\">\n      <article class=\"alert\"><div class=\"alert-top\"><span class=\"severity high\">HIGH RISK</span><span style=\"color:var(--dim);font-size:10px\">2m ago</span></div><h3>Multiple intermediary wallets</h3><p>A chain of 7 wallets was detected between the source and destination.</p></article>\n      <article class=\"alert\"><div class=\"alert-top\"><span class=\"severity medium\">MEDIUM RISK</span><span style=\"color:var(--dim);font-size:10px\">8m ago</span></div><h3>Unusual transaction frequency</h3><p>Transaction volume increased sharply during a 13-minute interval.</p></article>\n      <article class=\"alert\"><div class=\"alert-top\"><span class=\"severity high\">HIGH RISK</span><span style=\"color:var(--dim);font-size:10px\">11m ago</span></div><h3>Flagged wallet connection</h3><p>An indirect connection to a known flagged address was identified.</p></article>\n    </div>\n  </div>\n</section>\n\n<section class=\"section\" id=\"about\">\n  <div class=\"container\">\n    <div class=\"section-head\"><div><div class=\"section-kicker\">WORKFLOW</div><h2>From address to <span class=\"lime\">lead.</span></h2></div><p class=\"section-desc\">A simple four-stage flow turns public blockchain records into an investigator-friendly starting point.</p></div>\n    <div class=\"steps\">\n      <div class=\"step\"><div class=\"n\">01</div><h3>Submit</h3><p>Enter a suspicious wallet address and select the blockchain to investigate.</p></div>\n      <div class=\"step\"><div class=\"n\">02</div><h3>Collect</h3><p>Retrieve public transaction records and structure wallet-to-wallet relationships.</p></div>\n      <div class=\"step\"><div class=\"n\">03</div><h3>Analyze</h3><p>Apply transparent pattern-detection rules and calculate a suspicion score.</p></div>\n      <div class=\"step\"><div class=\"n\">04</div><h3>Investigate</h3><p>Explore the graph, timeline, alerts, and reasons behind every finding.</p></div>\n    </div>\n  </div>\n</section>\n\n<section class=\"section\" id=\"technology\" style=\"padding-top:20px\">\n  <div class=\"container\">\n    <div class=\"section-head\"><div><div class=\"section-kicker\">TECHNOLOGY</div><h2>Built for <span class=\"lime\">blockchain</span> investigation.</h2></div></div>\n    <div class=\"stack\">\n      <div class=\"tech\"><b>Etherscan API</b><span>Ethereum data</span></div>\n      <div class=\"tech\"><b>Blockchain.info</b><span>Bitcoin data</span></div>\n      <div class=\"tech\"><b>Neo4j</b><span>Graph database</span></div>\n      <div class=\"tech\"><b>Python</b><span>Analytics engine</span></div>\n      <div class=\"tech\"><b>React</b><span>Frontend layer</span></div>\n      <div class=\"tech\"><b>D3.js</b><span>Graph visualization</span></div>\n    </div>\n  </div>\n</section>\n</main>\n\n<footer>\n  <div class=\"container footer-grid\">\n    <div><div class=\"logo\">CHAIN<span>SLEUTH</span></div><div class=\"footer-copy\">Blockchain intelligence for modern investigations.</div></div>\n    <div class=\"footer-links\"><a href=\"#investigate\">Investigate</a><a href=\"#dashboard\">Dashboard</a><a href=\"#technology\">Technology</a><a href=\"#about\">About</a></div>\n  </div>\n</footer>\n\n<div class=\"overlay\" id=\"overlay\" onclick=\"closeDrawer()\"></div>\n<aside class=\"drawer\" id=\"drawer\">\n  <button class=\"drawer-close\" onclick=\"closeDrawer()\">\u00d7</button>\n  <div class=\"drawer-label\">SELECTED WALLET</div>\n  <h2>Wallet <span class=\"lime\">Details.</span></h2>\n  <div class=\"detail\"><small>ADDRESS</small><b id=\"drawerAddress\">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</b></div>\n  <div class=\"detail\"><small>RISK SCORE</small><b style=\"color:var(--lime)\">87 / 100 \u2014 HIGH RISK</b></div>\n  <div class=\"detail\"><small>TRANSACTIONS</small><b>247 analyzed</b></div>\n  <div class=\"detail\"><small>LINKED WALLETS</small><b>34 connections</b></div>\n  <div class=\"detail\"><small>DETECTED PATTERNS</small><b>Fund Splitting \u00b7 Rapid Pass-Through</b></div>\n  <button class=\"btn btn-primary\" style=\"width:100%;margin-top:25px\" onclick=\"toast('Graph focus applied to selected wallet.');closeDrawer()\">Focus on Graph</button>\n</aside>\n<div class=\"toast\" id=\"toast\"></div>\n";
-const PAGE_SCRIPT = "lucide.createIcons();\n\nconst nodes = [\n  {id:\"A\",label:\"0x742d\u2026f44e\",risk:\"high\",x:.5,y:.5},\n  {id:\"B\",label:\"0x19a3\u20268bc2\",risk:\"normal\",x:.28,y:.34},\n  {id:\"C\",label:\"0x5fe2\u2026119a\",risk:\"high\",x:.69,y:.29},\n  {id:\"D\",label:\"0xa817\u2026d921\",risk:\"suspicious\",x:.85,y:.55},\n  {id:\"E\",label:\"0xb20c\u2026ee73\",risk:\"suspicious\",x:.65,y:.74},\n  {id:\"F\",label:\"0x91de\u202620ac\",risk:\"normal\",x:.32,y:.68},\n  {id:\"G\",label:\"0x40bc\u202677a1\",risk:\"normal\",x:.12,y:.54},\n  {id:\"H\",label:\"0xf08d\u202691cc\",risk:\"flagged\",x:.91,y:.78},\n  {id:\"I\",label:\"0x2a7f\u2026a01d\",risk:\"normal\",x:.47,y:.16}\n];\nconst links=[[\"A\",\"B\"],[\"A\",\"C\"],[\"B\",\"F\"],[\"B\",\"G\"],[\"C\",\"D\"],[\"C\",\"E\"],[\"C\",\"I\"],[\"D\",\"H\"],[\"E\",\"H\"],[\"F\",\"G\"]];\n\nfunction drawGraph(selector, compact=false){\n  const svg=d3.select(selector);\n  svg.selectAll(\"*\").remove();\n  const el=document.querySelector(selector);\n  const w=el.clientWidth||600,h=el.clientHeight||400;\n  svg.attr(\"viewBox\",`0 0 ${w} ${h}`);\n  const defs=svg.append(\"defs\");\n  const filter=defs.append(\"filter\").attr(\"id\",\"glow\"+selector.replace(\"#\",\"\"));\n  filter.append(\"feGaussianBlur\").attr(\"stdDeviation\",\"4\").attr(\"result\",\"blur\");\n  const merge=filter.append(\"feMerge\");merge.append(\"feMergeNode\").attr(\"in\",\"blur\");merge.append(\"feMergeNode\").attr(\"in\",\"SourceGraphic\");\n  const scaleX=n=>n.x*w,scaleY=n=>n.y*h;\n  const map=new Map(nodes.map(n=>[n.id,n]));\n  const g=svg.append(\"g\");\n  links.forEach(([a,b])=>{\n    const s=map.get(a),t=map.get(b);\n    g.append(\"line\").attr(\"x1\",scaleX(s)).attr(\"y1\",scaleY(s)).attr(\"x2\",scaleX(t)).attr(\"y2\",scaleY(t))\n      .attr(\"stroke\",\"rgba(182,255,0,.28)\").attr(\"stroke-width\",1.2);\n    g.append(\"line\").attr(\"x1\",scaleX(s)).attr(\"y1\",scaleY(s)).attr(\"x2\",scaleX(t)).attr(\"y2\",scaleY(t))\n      .attr(\"stroke\",\"rgba(182,255,0,.13)\").attr(\"stroke-width\",7).attr(\"filter\",\"url(#glow\"+selector.replace(\"#\",\"\")+\")\");\n  });\n  nodes.forEach(n=>{\n    const group=g.append(\"g\").attr(\"transform\",`translate(${scaleX(n)},${scaleY(n)})`).style(\"cursor\",\"pointer\")\n      .on(\"click\",()=>openDrawer(n));\n    const c=n.risk===\"high\"||n.risk===\"flagged\"?\"#b6ff00\":n.risk===\"suspicious\"?\"#ffbd4a\":\"#718087\";\n    group.append(\"circle\").attr(\"r\",n.id===\"A\"?15:11).attr(\"fill\",\"#0a0e10\").attr(\"stroke\",c).attr(\"stroke-width\",2);\n    group.append(\"circle\").attr(\"r\",4).attr(\"fill\",c);\n    if(!compact) group.append(\"text\").attr(\"y\",27).attr(\"text-anchor\",\"middle\").attr(\"fill\",\"#a9b1b3\").attr(\"font-size\",\"9\").text(n.label);\n  });\n  // moving pulse on main target\n  const pulse=g.append(\"circle\").attr(\"cx\",scaleX(map.get(\"A\"))).attr(\"cy\",scaleY(map.get(\"A\"))).attr(\"r\",17).attr(\"fill\",\"none\").attr(\"stroke\",\"#b6ff00\").attr(\"opacity\",.55);\n  pulse.transition().duration(1400).attr(\"r\",32).attr(\"opacity\",0).on(\"end\",function(){d3.select(this).attr(\"r\",17).attr(\"opacity\",.55); pulseLoop();});\n  function pulseLoop(){pulse.transition().duration(1400).attr(\"r\",32).attr(\"opacity\",0).on(\"end\",()=>{pulse.attr(\"r\",17).attr(\"opacity\",.55);pulseLoop()})}\n}\nfunction openDrawer(n){\n  document.getElementById(\"drawerAddress\").textContent=n.label;\n  document.getElementById(\"drawer\").classList.add(\"open\");\n  document.getElementById(\"overlay\").classList.add(\"show\");\n}\nfunction closeDrawer(){document.getElementById(\"drawer\").classList.remove(\"open\");document.getElementById(\"overlay\").classList.remove(\"show\")}\nfunction toast(msg){\n  const t=document.getElementById(\"toast\");t.textContent=msg;t.classList.add(\"show\");\n  clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove(\"show\"),2800);\n}\nfunction scrollToInvestigation(){document.getElementById(\"investigate\").scrollIntoView({behavior:\"smooth\"})}\nfunction analyze(){\n  const btn=document.getElementById(\"analyzeBtn\"),input=document.getElementById(\"walletInput\");\n  if(!input.value.trim()){toast(\"Enter a wallet address or load the demo investigation.\");input.focus();return}\n  btn.disabled=true;btn.innerHTML='<span class=\"spinner\"></span>Analyzing';\n  const loading=document.getElementById(\"loading\"),lt=document.getElementById(\"loadingText\");\n  loading.style.display=\"block\";document.getElementById(\"results\").classList.remove(\"show\");\n  const messages=[\"Fetching blockchain data...\",\"Mapping wallet relationships...\",\"Scanning transaction patterns...\",\"Calculating suspicion score...\"];\n  let i=0;lt.textContent=messages[0];\n  const interval=setInterval(()=>{i++;if(i<messages.length)lt.textContent=messages[i]},650);\n  setTimeout(()=>{\n    clearInterval(interval);loading.style.display=\"none\";document.getElementById(\"results\").classList.add(\"show\");\n    btn.disabled=false;btn.textContent=\"Analyze Wallet \u2192\";\n    document.getElementById(\"results\").scrollIntoView({behavior:\"smooth\",block:\"start\"});\n    setTimeout(()=>drawGraph(\"#mainGraph\"),50);\n    toast(\"Analysis complete \u2014 4 suspicious patterns detected.\");\n  },2900);\n}\nfunction loadDemo(){\n  document.getElementById(\"walletInput\").value=\"0x742d35Cc6634C0532925a3b844Bc454e4438f44e\";\n  analyze();\n}\nfunction toggleMenu(){\n  const links=document.querySelector(\".navlinks\");\n  const open=links.style.display===\"flex\";\n  links.style.display=open?\"none\":\"flex\";\n  links.style.position=\"absolute\";links.style.top=\"66px\";links.style.left=\"0\";links.style.right=\"0\";\n  links.style.padding=\"22px\";links.style.background=\"#0a0e10\";links.style.borderBottom=\"1px solid var(--line)\";\n  links.style.flexDirection=\"column\";links.style.gap=\"18px\";\n}\nwindow.addEventListener(\"resize\",()=>{drawGraph(\"#heroGraph\",true);if(document.getElementById(\"results\").classList.contains(\"show\"))drawGraph(\"#mainGraph\")});\nwindow.addEventListener(\"load\",()=>drawGraph(\"#heroGraph\",true));\n";
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-bg-text">FORENSICS</div>
+        <div class="container">
+            <div class="hero-inner">
+                <div class="hero-content">
+                    <div class="hero-eyebrow">Blockchain Forensics / Intelligence Platform</div>
+                    <h1 class="hero-title">Trace the <span class="highlight">money</span>.<br>Expose the <span class="highlight">pattern</span>.</h1>
+                    <p class="hero-desc">Investigate cryptocurrency transactions, uncover suspicious wallet relationships, and identify potential laundering patterns through transparent blockchain intelligence.</p>
+                    <div class="hero-buttons">
+                        <a href="#dashboard" class="btn btn-primary" onclick="document.getElementById('dashboard').classList.add('active');">Launch Dashboard &rarr;</a>
+                        <button class="btn btn-secondary" id="heroDemoBtn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> 
+                            Watch Demo
+                        </button>
+                    </div>
+                    <div class="hero-trust">
+                        <div class="trust-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B6FF00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg><strong>LIVE BLOCKCHAIN DATA</strong></div>
+                        <div class="trust-item"><span>Etherscan / Ethereum</span></div>
+                        <div class="trust-item"><span>Blockchain.info / Bitcoin</span></div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <svg class="network-graph" id="heroGraph" viewBox="0 0 500 500"></svg>
+                    <div class="floating-card fc-risk">
+                        <div class="floating-card-label">Risk Score</div>
+                        <div class="floating-card-value">87 / 100</div>
+                    </div>
+                    <div class="floating-card fc-pattern">
+                        <div class="floating-card-label">Suspicious Pattern</div>
+                        <div class="floating-card-value" style="font-size:0.875rem;">Rapid Pass-Through</div>
+                    </div>
+                    <div class="floating-card fc-linked">
+                        <div class="floating-card-label">Linked Wallets</div>
+                        <div class="floating-card-value">14</div>
+                    </div>
+                    <div class="floating-card fc-tx">
+                        <div class="floating-card-label">Transactions</div>
+                        <div class="floating-card-value">247</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
-      return;
-    }
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
+    <!-- Investigation Input -->
+    <section class="investigate-section" id="investigate">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Start an Investigation</h2>
+                <p class="section-subtitle">Enter a wallet address to begin tracing transaction flows and detecting suspicious patterns.</p>
+            </div>
+            <div class="investigate-box">
+                <div class="input-group">
+                    <label class="input-label" for="walletInput">Enter wallet address</label>
+                    <input type="text" class="input-field" id="walletInput" placeholder="0x742d35Cc6634C0532925a3b844Bc454e4438f44e" aria-label="Wallet address input">
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label class="input-label" for="blockchainSelect">Blockchain</label>
+                        <select class="select-field" id="blockchainSelect" aria-label="Select blockchain">
+                            <option value="ethereum">Ethereum</option>
+                            <option value="bitcoin">Bitcoin</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" for="modeSelect">Investigation Mode</label>
+                        <select class="select-field" id="modeSelect" aria-label="Select investigation mode">
+                            <option value="full">Full Analysis</option>
+                            <option value="flow">Transaction Flow</option>
+                            <option value="risk">Risk Analysis</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="investigate-actions">
+                    <button class="btn btn-primary" id="analyzeBtn">Analyze Wallet <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+                    <button class="demo-btn" id="loadDemoBtn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Load Demo Investigation</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" role="dialog" aria-label="Analysis in progress">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText"><strong>Analyzing</strong> wallet data...</div>
+        <div class="loading-steps">
+            <div class="loading-step active" id="step1"><span class="step-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg></span>Fetching blockchain data...</div>
+            <div class="loading-step" id="step2"><span class="step-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg></span>Mapping wallet relationships...</div>
+            <div class="loading-step" id="step3"><span class="step-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>Scanning transaction patterns...</div>
+            <div class="loading-step" id="step4"><span class="step-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg></span>Calculating suspicion score...</div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <div class="demo-label"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> DEMO DATA — For demonstration purposes only</div>
+            <div class="dashboard-header">
+                <div>
+                    <h2 class="dashboard-title">Investigation Overview</h2>
+                    <p class="dashboard-subtitle">Target: <span id="targetWallet" style="font-family:var(--font-mono);color:var(--accent);">0x742d...f44e</span></p>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Risk Score</div><div class="stat-value accent" id="statRisk">87 / 100</div></div>
+                <div class="stat-card"><div class="stat-label">Transactions Analyzed</div><div class="stat-value" id="statTx">247</div></div>
+                <div class="stat-card"><div class="stat-label">Linked Wallets</div><div class="stat-value" id="statLinked">34</div></div>
+                <div class="stat-card"><div class="stat-label">Flagged Connections</div><div class="stat-value warning" id="statFlagged">8</div></div>
+                <div class="stat-card"><div class="stat-label">Total Volume</div><div class="stat-value" id="statVolume">$1.42M</div></div>
+            </div>
+
+            <!-- Risk Score Section -->
+            <div class="risk-section" id="risk">
+                <div class="risk-card">
+                    <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:1.5rem;">Suspicion Score</h3>
+                    <div class="risk-gauge">
+                        <svg width="200" height="200" viewBox="0 0 200 200">
+                            <circle class="risk-gauge-bg" cx="100" cy="100" r="70"></circle>
+                            <circle class="risk-gauge-fill" id="riskGaugeFill" cx="100" cy="100" r="70"></circle>
+                        </svg>
+                        <div class="risk-gauge-center">
+                            <div class="risk-score-number" id="riskScoreNum">0</div>
+                            <div class="risk-score-label">/ 100</div>
+                        </div>
+                    </div>
+                    <div class="risk-status" id="riskStatus">HIGH RISK</div>
+                </div>
+                <div class="risk-card" style="text-align:left;">
+                    <h3 style="font-size:1.25rem;font-weight:700;margin-bottom:1.5rem;">Why was this wallet flagged?</h3>
+                    <div class="risk-reasons">
+                        <div class="risk-reason"><span class="risk-reason-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span><span>Rapid movement of funds detected across multiple wallets</span></div>
+                        <div class="risk-reason"><span class="risk-reason-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span><span>Multiple intermediary wallets identified in transaction chain</span></div>
+                        <div class="risk-reason"><span class="risk-reason-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span><span>Fund splitting behavior detected across 6 destination wallets</span></div>
+                        <div class="risk-reason"><span class="risk-reason-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span><span>Direct connection to previously flagged address detected</span></div>
+                        <div class="risk-reason"><span class="risk-reason-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></span><span>Unusual transaction timing: 23 transactions within 4 minutes</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Graph -->
+            <div class="graph-section" id="graph">
+                <div class="graph-header">
+                    <h3 style="font-size:1.5rem;font-weight:700;">Transaction Flow</h3>
+                    <div class="graph-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="normal">Normal</button>
+                        <button class="filter-btn" data-filter="suspicious">Suspicious</button>
+                        <button class="filter-btn" data-filter="flagged">Flagged</button>
+                    </div>
+                </div>
+                <div class="graph-container" id="graphContainer">
+                    <svg id="txGraph"></svg>
+                    <div class="graph-controls">
+                        <button class="graph-control-btn" id="zoomIn" aria-label="Zoom in"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></svg></button>
+                        <button class="graph-control-btn" id="zoomOut" aria-label="Zoom out"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg></button>
+                        <button class="graph-control-btn" id="resetGraph" aria-label="Reset graph"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detected Patterns -->
+            <div id="patterns">
+                <div class="section-header" style="text-align:left;margin-bottom:2rem;">
+                    <h3 class="section-title" style="font-size:1.75rem;">Detected Patterns</h3>
+                </div>
+                <div class="patterns-grid">
+                    <div class="pattern-card">
+                        <div class="pattern-number">01</div>
+                        <div class="pattern-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/><circle cx="12" cy="12" r="10"/></svg></div>
+                        <div class="pattern-name">Fund Splitting</div>
+                        <div class="pattern-desc">Funds divided across multiple destination wallets in rapid succession, suggesting intentional obfuscation.</div>
+                        <div class="pattern-meta">
+                            <span class="pattern-status">Detected</span>
+                            <span class="pattern-risk">+24</span>
+                        </div>
+                        <a href="#graph" class="pattern-link">View on graph <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                    </div>
+                    <div class="pattern-card">
+                        <div class="pattern-number">02</div>
+                        <div class="pattern-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></div>
+                        <div class="pattern-name">Rapid Pass-Through</div>
+                        <div class="pattern-desc">Funds moved through 5+ intermediary wallets within a 12-minute window with minimal retention time.</div>
+                        <div class="pattern-meta">
+                            <span class="pattern-status">Detected</span>
+                            <span class="pattern-risk">+31</span>
+                        </div>
+                        <a href="#graph" class="pattern-link">View on graph <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                    </div>
+                    <div class="pattern-card">
+                        <div class="pattern-number">03</div>
+                        <div class="pattern-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg></div>
+                        <div class="pattern-name">Peel Chain</div>
+                        <div class="pattern-desc">Funds repeatedly transferred through intermediary wallets while gradually separating amounts into smaller chunks.</div>
+                        <div class="pattern-meta">
+                            <span class="pattern-status possible">Possible</span>
+                            <span class="pattern-risk">+18</span>
+                        </div>
+                        <a href="#graph" class="pattern-link">View on graph <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                    </div>
+                    <div class="pattern-card">
+                        <div class="pattern-number">04</div>
+                        <div class="pattern-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+                        <div class="pattern-name">Flagged Address Connection</div>
+                        <div class="pattern-desc">Wallet has a direct transaction path to an address previously flagged in law enforcement databases.</div>
+                        <div class="pattern-meta">
+                            <span class="pattern-status">Detected</span>
+                            <span class="pattern-risk">+14</span>
+                        </div>
+                        <a href="#graph" class="pattern-link">View on graph <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Timeline -->
+            <div class="timeline" id="timeline">
+                <div class="timeline-header">
+                    <h3 style="font-size:1.5rem;font-weight:700;">Transaction Timeline</h3>
+                    <div class="timeline-filters">
+                        <button class="filter-btn active" data-tx-filter="all">All</button>
+                        <button class="filter-btn" data-tx-filter="suspicious">Suspicious Only</button>
+                    </div>
+                </div>
+                <div class="timeline-list" id="timelineList">
+                    <div class="timeline-item" data-tx-type="normal">
+                        <div class="timeline-time">10:42 AM</div>
+                        <div class="timeline-tx"><span class="timeline-addr from">0x742d...f44e</span><span class="timeline-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="timeline-addr">0x8a3e...b21c</span></div>
+                        <div class="timeline-amount">$42,000</div>
+                        <div class="timeline-badge normal">Normal</div>
+                    </div>
+                    <div class="timeline-item" data-tx-type="suspicious">
+                        <div class="timeline-time">10:47 AM</div>
+                        <div class="timeline-tx"><span class="timeline-addr from">0x8a3e...b21c</span><span class="timeline-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="timeline-addr">0x3f1a...c89d</span></div>
+                        <div class="timeline-amount">$39,800</div>
+                        <div class="timeline-badge suspicious">Suspicious</div>
+                    </div>
+                    <div class="timeline-item" data-tx-type="suspicious">
+                        <div class="timeline-time">10:49 AM</div>
+                        <div class="timeline-tx"><span class="timeline-addr from">0x3f1a...c89d</span><span class="timeline-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="timeline-addr">0x5d2e...a14f</span></div>
+                        <div class="timeline-amount">$19,500</div>
+                        <div class="timeline-badge suspicious">Suspicious</div>
+                    </div>
+                    <div class="timeline-item" data-tx-type="flagged">
+                        <div class="timeline-time">10:51 AM</div>
+                        <div class="timeline-tx"><span class="timeline-addr from">0x3f1a...c89d</span><span class="timeline-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="timeline-addr">0x9c4b...e72a</span></div>
+                        <div class="timeline-amount">$19,800</div>
+                        <div class="timeline-badge flagged">Fund Splitting</div>
+                    </div>
+                    <div class="timeline-item" data-tx-type="suspicious">
+                        <div class="timeline-time">10:53 AM</div>
+                        <div class="timeline-tx"><span class="timeline-addr from">0x5d2e...a14f</span><span class="timeline-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="timeline-addr">0x1b7c...d35e</span></div>
+                        <div class="timeline-amount">$12,300</div>
+                        <div class="timeline-badge suspicious">Suspicious</div>
+                    </div>
+                    <div class="timeline-item" data-tx-type="normal">
+                        <div class="timeline-time">11:15 AM</div>
+                        <div class="timeline-tx"><span class="timeline-addr from">0x1b7c...d35e</span><span class="timeline-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span><span class="timeline-addr">0x4e9f...h68k</span></div>
+                        <div class="timeline-amount">$8,200</div>
+                        <div class="timeline-badge normal">Normal</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div class="alerts-section" id="alerts">
+                <div class="section-header" style="text-align:left;margin-bottom:2rem;">
+                    <h3 class="section-title" style="font-size:1.75rem;">Investigation Alerts</h3>
+                </div>
+                <div class="alert-list">
+                    <div class="alert-item">
+                        <span class="alert-severity high">High Risk</span>
+                        <div class="alert-content">
+                            <div class="alert-text">Multiple intermediary wallets detected in rapid succession</div>
+                            <div class="alert-time">10:47 AM — Pattern Analysis</div>
+                        </div>
+                        <a href="#graph" class="alert-action">Investigate →</a>
+                    </div>
+                    <div class="alert-item">
+                        <span class="alert-severity medium">Medium Risk</span>
+                        <div class="alert-content">
+                            <div class="alert-text">Unusual transaction frequency: 6 transactions in 11 minutes</div>
+                            <div class="alert-time">10:49 AM — Frequency Analysis</div>
+                        </div>
+                        <a href="#timeline" class="alert-action">Investigate →</a>
+                    </div>
+                    <div class="alert-item">
+                        <span class="alert-severity high">High Risk</span>
+                        <div class="alert-content">
+                            <div class="alert-text">Connection to previously flagged wallet 0x9c4b...e72a</div>
+                            <div class="alert-time">10:51 AM — Database Cross-Reference</div>
+                        </div>
+                        <a href="#graph" class="alert-action">Investigate →</a>
+                    </div>
+                    <div class="alert-item">
+                        <span class="alert-severity low">Low Risk</span>
+                        <div class="alert-content">
+                            <div class="alert-text">Large transaction volume detected ($42,000 initial transfer)</div>
+                            <div class="alert-time">10:42 AM — Volume Analysis</div>
+                        </div>
+                        <a href="#timeline" class="alert-action">Investigate →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Panel -->
+            <div class="case-panel" id="case">
+                <div class="case-header">
+                    <h3 class="case-title">Active Investigation</h3>
+                    <div class="case-actions">
+                        <button class="btn btn-secondary btn-sm" id="saveInvestigation"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Investigation</button>
+                        <button class="btn btn-primary btn-sm" id="exportReport"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Export Report</button>
+                    </div>
+                </div>
+                <div class="case-grid">
+                    <div class="case-field">
+                        <span class="case-field-label">Case ID</span>
+                        <span class="case-field-value">CS-2026-0142</span>
+                    </div>
+                    <div class="case-field">
+                        <span class="case-field-label">Target Wallet</span>
+                        <span class="case-field-value accent">0x742d...f44e</span>
+                    </div>
+                    <div class="case-field">
+                        <span class="case-field-label">Blockchain</span>
+                        <span class="case-field-value">Ethereum</span>
+                    </div>
+                    <div class="case-field">
+                        <span class="case-field-label">Investigation Started</span>
+                        <span class="case-field-value">Today</span>
+                    </div>
+                    <div class="case-field">
+                        <span class="case-field-label">Current Status</span>
+                        <span class="case-field-value accent">Analyzing</span>
+                    </div>
+                    <div class="case-field">
+                        <span class="case-field-label">Risk Score</span>
+                        <span class="case-field-value warning">87 / 100</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Side Panel -->
+    <div class="side-panel-overlay" id="sidePanelOverlay"></div>
+    <div class="side-panel" id="sidePanel" role="dialog" aria-label="Wallet details">
+        <div class="side-panel-header">
+            <h3 class="side-panel-title">Wallet Details</h3>
+            <button class="side-panel-close" id="sidePanelClose" aria-label="Close panel"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        </div>
+        <div id="sidePanelContent">
+            <div class="wallet-detail-row"><span class="wallet-detail-label">Address</span><span class="wallet-detail-value" id="panelAddress">0x742d...f44e</span></div>
+            <div class="wallet-detail-row"><span class="wallet-detail-label">Risk Score</span><span class="wallet-detail-value accent" id="panelRisk">87/100</span></div>
+            <div class="wallet-detail-row"><span class="wallet-detail-label">Status</span><span class="wallet-detail-value warning" id="panelStatus">High Risk</span></div>
+            <div class="wallet-detail-row"><span class="wallet-detail-label">Transactions</span><span class="wallet-detail-value" id="panelTx">247</span></div>
+            <div class="wallet-detail-row"><span class="wallet-detail-label">Linked Wallets</span><span class="wallet-detail-value" id="panelLinked">14</span></div>
+            <div class="wallet-detail-row"><span class="wallet-detail-label">Total Volume</span><span class="wallet-detail-value" id="panelVolume">$1.42M</span></div>
+            <div style="margin-top:1.5rem;">
+                <span class="wallet-detail-label" style="display:block;margin-bottom:0.5rem;">Detected Patterns</span>
+                <div class="pattern-tags" id="panelPatterns">
+                    <span class="pattern-tag">Fund Splitting</span>
+                    <span class="pattern-tag">Rapid Pass-Through</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="graphTooltip">
+        <div class="tooltip-title" id="tooltipTitle">Wallet</div>
+        <div class="tooltip-row"><span class="tooltip-label">Risk Score</span><span class="tooltip-value" id="tooltipRisk">--</span></div>
+        <div class="tooltip-row"><span class="tooltip-label">Incoming</span><span class="tooltip-value" id="tooltipIn">--</span></div>
+        <div class="tooltip-row"><span class="tooltip-label">Outgoing</span><span class="tooltip-value" id="tooltipOut">--</span></div>
+        <div class="tooltip-row"><span class="tooltip-label">Volume</span><span class="tooltip-value" id="tooltipVol">--</span></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Why ChainSleuth -->
+    <section class="why-section" id="about">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Why ChainSleuth?</h2>
+                <p class="section-subtitle">Blockchain data is public. Investigation shouldn't be complicated.</p>
+            </div>
+            <p style="text-align:center;color:var(--text-secondary);max-width:700px;margin:0 auto 3rem;line-height:1.7;">Blockchain transactions are publicly visible, but manually tracing funds across multiple wallets is slow and technically difficult. ChainSleuth transforms raw transaction data into actionable intelligence.</p>
+            <div class="why-grid">
+                <div class="why-card">
+                    <div class="why-number">01</div>
+                    <h3 class="why-card-title">Trace</h3>
+                    <p class="why-card-desc">Follow funds across connected wallets with an interactive visual graph. See exactly where money moved, when, and through which intermediaries.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-number">02</div>
+                    <h3 class="why-card-title">Detect</h3>
+                    <p class="why-card-desc">Identify suspicious transaction patterns automatically — fund splitting, rapid pass-throughs, peel chains, and connections to flagged addresses.</p>
+                </div>
+                <div class="why-card">
+                    <div class="why-number">03</div>
+                    <h3 class="why-card-title">Prioritize</h3>
+                    <p class="why-card-desc">Get a transparent, explainable risk score that helps investigators focus on the most suspicious leads first. No black boxes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">From wallet address to investigative lead in four steps.</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <h3 class="step-title">Submit</h3>
+                    <p class="step-desc">Enter a suspicious wallet address and select your investigation parameters.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <h3 class="step-title">Collect</h3>
+                    <p class="step-desc">Retrieve public blockchain transaction data from Etherscan or Blockchain.info APIs.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <h3 class="step-title">Analyze</h3>
+                    <p class="step-desc">Detect suspicious wallet relationships, patterns, and anomalies using rule-based analytics.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">04</div>
+                    <h3 class="step-title">Investigate</h3>
+                    <p class="step-desc">Explore the visual graph and prioritized findings with full transparency and explainability.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology -->
+    <section class="tech-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Built for Blockchain Investigation</h2>
+                <p class="section-subtitle">A transparent, modular technology stack designed for forensic workflows.</p>
+            </div>
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <div class="tech-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg></div>
+                    <div><div class="tech-name">Etherscan API</div><div class="tech-desc">Ethereum transaction data</div></div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.192-6.897m-1.192 6.897L12.5 21.5m-1.225-2.411c-4.924.868-6.14-6.025-1.192-6.897m1.192 6.897L11.5 21.5m1.225-2.411c4.924.868 6.14-6.025 1.192-6.897m-1.192 6.897L12.5 21.5"/><path d="M15.5 11.5c.466.751.593 1.677.296 2.548-.297.87-1.01 1.547-1.87 1.79"/><path d="M8.5 11.5c-.466.751-.593 1.677-.296 2.548.297.87 1.01 1.547 1.87 1.79"/></svg></div>
+                    <div><div class="tech-name">Blockchain.info API</div><div class="tech-desc">Bitcoin transaction data</div></div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg></div>
+                    <div><div class="tech-name">Neo4j</div><div class="tech-desc">Wallet relationship graph</div></div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/><path d="M11 17v.01"/><path d="M7 14v.01"/></svg></div>
+                    <div><div class="tech-name">Python</div><div class="tech-desc">Pattern detection and analytics</div></div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
+                    <div><div class="tech-name">React</div><div class="tech-desc">Investigator interface</div></div>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
+                    <div><div class="tech-name">D3.js / React Flow</div><div class="tech-desc">Transaction visualization</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <section class="disclaimer">
+        <div class="container">
+            <div class="disclaimer-box">
+                <div class="disclaimer-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></div>
+                <p class="disclaimer-text"><strong>Important:</strong> ChainSleuth identifies suspicious patterns in publicly available blockchain data. It does not make legal determinations or accusations. All findings should be reviewed by a qualified human investigator. Risk scores represent detected pattern correlations, not proof of criminal activity.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <a href="#" class="footer-logo">
+                        <div class="nav-logo-icon" style="width:28px;height:28px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div>
+                        ChainSleuth
+                    </a>
+                    <p class="footer-tagline">Blockchain intelligence for modern investigations. Trace the money. Expose the pattern.</p>
+                </div>
+                <div>
+                    <h4 class="footer-col-title">Product</h4>
+                    <ul class="footer-links">
+                        <li><a href="#investigate">Investigate</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#graph">Transaction Graph</a></li>
+                        <li><a href="#alerts">Alerts</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="footer-col-title">Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">Pattern Library</a></li>
+                        <li><a href="#">Case Studies</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="footer-col-title">Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy</a></li>
+                        <li><a href="#">Terms</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2026 ChainSleuth. All rights reserved. Demo prototype for hackathon presentation.</p>
+                <div class="footer-status"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> System Status: Operational</div>
+            </div>
+        </div>
+    </footer>
+`;
 
 export default function LandingPage() {
   const containerRef = useRef(null);
-  const activeScriptEl = useRef(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const loadScript = (src) => {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) return resolve();
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    };
 
-    async function boot() {
-      for (const src of EXTERNAL_SCRIPTS) {
-        await loadScript(src);
-      }
-      if (cancelled) return;
+    const boot = async () => {
+      // 1. Load dependencies
+      await loadScript("https://unpkg.com/lucide@latest");
+      await loadScript("https://d3js.org/d3.v7.min.js");
+      
+      // 2. Initialize icons
+      if (window.lucide) window.lucide.createIcons();
 
-      const scriptEl = document.createElement("script");
-      scriptEl.type = "text/javascript";
-      scriptEl.text = PAGE_SCRIPT;
-      document.body.appendChild(scriptEl);
-      activeScriptEl.current = scriptEl;
-    }
+      // 3. Load your custom logic from the public folder
+      await loadScript("/chainsleuth-logic.js");
+    };
 
     boot();
-
-    return () => {
-      cancelled = true;
-      if (activeScriptEl.current) {
-        document.body.removeChild(activeScriptEl.current);
-        activeScriptEl.current = null;
-      }
-    };
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="chainsleuth-landing"
-      dangerouslySetInnerHTML={{ __html: BODY_HTML }}
+    <div 
+      ref={containerRef} 
+      className="chainsleuth-wrapper"
+      dangerouslySetInnerHTML={{ __html: BODY_HTML }} 
     />
   );
 }
